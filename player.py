@@ -48,13 +48,11 @@ class Player(Ship):
             self.x += self.x_speed
 
     def create_bullets(self):
-        if (len(self.bullets) < self.max_amount_bullets) and (self.creation_cooldown_counter == 0):
+        # Permite crear balas si no se ha alcanzado el máximo y no hay cooldown
+        if (len(self.bullets) < self.max_bullets) and (self.creation_cooldown_counter == 0):
             bullet = Bullet(self.x, self.y, self.bullet_img)
             self.bullets.append(bullet)
             self.creation_cooldown_counter = 1
-        for bullet in self.fired_bullets:
-            if bullet.y <= -40:
-                self.fired_bullets.pop(0)
 
     def cooldown(self):
         if self.bullet_cooldown_counter >= 20:
@@ -69,14 +67,27 @@ class Player(Ship):
 
     def fire(self, window):
         keys = pygame.key.get_pressed()
-
-        if (keys[pygame.K_SPACE]) and (len(self.bullets) > 0) and (self.bullet_cooldown_counter == 0):
-            self.bullets[-1].x = self.x + (self.ship_img.get_width() - self.bullet_img.get_width())/2
-            self.bullets[-1].y = self.y + 10
-            self.fired_bullets.append(self.bullets.pop())
+        # Solo dispara si hay balas en self.bullets y no hay cooldown
+        if keys[pygame.K_SPACE] and len(self.bullets) > 0 and self.bullet_cooldown_counter == 0:
+            bullet = self.bullets.pop()
+            bullet.x = self.x + (self.ship_img.get_width() - self.bullet_img.get_width()) // 2
+            bullet.y = self.y
+            self.fired_bullets.append(bullet)
             self.bullet_cooldown_counter = 1
             self.creation_cooldown_counter = 1
+        # Mover y dibujar balas disparadas
+        for bullet in self.fired_bullets[:]:
+            bullet.move(-self.bullet_speed)  # Mueve hacia arriba
+            bullet.draw(window)
+            # Eliminar balas fuera de pantalla
+            if bullet.y < -40:
+                self.fired_bullets.remove(bullet)
 
-        for i in range(len(self.fired_bullets)):
-            self.fired_bullets[i].move(self.bullet_speed)
-            self.fired_bullets[i].draw(window)
+    def hit(self, enemies):
+        # Verifica si alguna bala impacta un enemigo
+        for bullet in self.fired_bullets[:]:
+            for enemy in enemies[:]:
+                if bullet.collision(enemy):
+                    enemies.remove(enemy)
+                    self.fired_bullets.remove(bullet)
+                    break

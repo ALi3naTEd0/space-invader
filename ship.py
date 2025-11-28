@@ -24,7 +24,7 @@ class Ship:
 		self.bullets = 0
 		self.fired_bullets = []
 		self.bullet_cooldown_counter = 0
-		self.cool_down = 120
+		self.cool_down = 30  # Recarga más rápida
 
 	def draw(self, window):
 		"""Dibuja la nave en la ventana dada."""
